@@ -1,0 +1,12 @@
+{
+  "name": "code-runner",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Santosh Swansi",
+  "license": "ISC",
+  "description": ""
+}
