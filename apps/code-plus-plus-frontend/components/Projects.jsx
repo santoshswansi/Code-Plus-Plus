@@ -47,7 +47,7 @@ function Projects() {
     }
 
     return (
-        <div className="flex flex-col w-full h-[100vh] !p-6 gap-6 bg-white">
+        <div className="flex flex-col w-full h-[100vh] !p-6 gap-6 bg-white font-(family-name:--font-space-grotesk)">
             <div className="flex items-center justify-between">
                 <p className="text-lg">Projects</p>
                 <div className={`h-7 w-45 rounded-sm text-white flex items-center justify-center ${userId !== "" ? "bg-indigo-600 hover:bg-indigo-500 cursor-pointer" : "bg-indigo-300"}`} onClick={() => { setUpdateOrCreateMode(CREATE_MODE); setProjectInput({name: ""});  setProjectDialogVisible(true); }}>+ Create New Project</div>
@@ -111,14 +111,14 @@ function Projects() {
                 }
             </div>
 
-            <Dialog header={"Create New Project"} visible={projectDialogVisible} className='bg-white w-90 h-45 shadow-md rounded-2xl !px-6 !py-4' onHide={() => {if (!projectDialogVisible) return; setProjectDialogVisible(false); }}>
+            <Dialog header={`${updateOrCreateMode === CREATE_MODE ? "Create": "Update"} New Project`} visible={projectDialogVisible} className='bg-white w-90 h-45 shadow-md rounded-2xl !px-6 !py-4 !font-(family-name:--font-space-grotesk)' onHide={() => {if (!projectDialogVisible) return; setProjectDialogVisible(false); }}>
                 <div className='flex flex-col gap-4 !mt-2'>
                     <div className="flex flex-col gap-1">
                         <label htmlFor='project' className="text-slate-500">Project Name</label>
-                        <input type="text" id="project" value={projectInput?.name} placeholder="Enter project name" className="bg-slate-200 rounded-sm !p-1 focus:outline-none" 
+                        <input type="text" id="project" value={projectInput?.name} placeholder="Enter project name" className="bg-slate-200 rounded-sm !px-2 !py-1 focus:outline-none" 
                               onChange={(e) => setProjectInput((proj) => ({...proj, name: e.target.value}))} />
                     </div>
-                    <input type="button" value={updateOrCreateMode == CREATE_MODE ? "Create Project" : "Update Project"} className="flex h-7 w-30 bg-indigo-600 items-center justify-center rounded-sm text-white hover:bg-indigo-500 cursor-pointer" 
+                    <input type="button" value={updateOrCreateMode == CREATE_MODE ? "Create Project" : "Update Project"} className="flex h-7 w-35 bg-indigo-600 items-center justify-center rounded-sm text-white hover:bg-indigo-500 cursor-pointer" 
                         onClick={() => ((updateOrCreateMode === UPDATE_MODE) ? updateProject(): createProject())} 
                     />
                 </div>

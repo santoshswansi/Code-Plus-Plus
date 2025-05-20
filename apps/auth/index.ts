@@ -193,7 +193,6 @@ app.get("/api/auth/user", async (req: AuthRequest, res: any, next: NextFunction)
   }
 });
 
-
 app.use((err: any, req: Request, res: any, next: NextFunction) => {
     logger.error(`${req.method} ${req.url} - ${err.message}`, { stack: err.stack });
 

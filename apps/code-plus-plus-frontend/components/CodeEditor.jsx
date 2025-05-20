@@ -27,7 +27,7 @@ function CodeEditor({handleCodeChange}) {
           tabSize,
           fontSize,
           minimap: { enabled: minimap },
-          detectIndentation: false,
+          detectIndentation: false
         }}
         language={LANGUAGE_NAME_TO_MONACO_LANGUAGE[currTab.language]}
         value={currTab.code}

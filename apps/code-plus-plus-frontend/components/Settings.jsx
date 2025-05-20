@@ -7,7 +7,7 @@ function Settings() {
     const {theme, setTheme, fontSize, setFontSize, tabSize, setTabSize, autoSave, setAutoSave, minimap, setMinimap} = useCodeEditorStore();
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 font-(family-name:--font-space-grotesk)">
             <p className="!mx-6 !mt-3 text-lg">Settings</p>
             <div className="w-[100%]">
                 <div className="flex flex-col !mx-6 gap-3 rounded-sm shadow-[0px_0px_10px_rgba(0,0,0,0.13)] !p-3">

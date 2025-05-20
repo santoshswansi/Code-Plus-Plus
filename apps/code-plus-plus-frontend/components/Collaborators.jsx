@@ -42,7 +42,7 @@ function Collaborators() {
     }
 
     return(
-        <div className="flex flex-col items-center gap-6 w-[100%] h-[100vh] bg-white">
+        <div className="flex flex-col items-center gap-6 w-[100%] h-[100vh] bg-white font-(family-name:--font-space-grotesk)">
             <div className="flex items-center !px-6 justify-between w-[100%] !py-3">
                 <p className="text-lg">Collaborators</p>
                 <div className={`flex gap-1 items-center justify-center rounded-md text-white h-7 w-20 ${ currProject.projectId !== PLAYGROUND_PROJECT_ID && currProject?.owner?.userId === userId  ? "bg-indigo-600 cursor-pointer hover:bg-indigo-500" : ""}`} 
@@ -120,7 +120,7 @@ function Collaborators() {
                     </div>
                 </div>
             </div>
-            <Dialog header={`${addOrUpdateMode === ADD_MODE ? "Add" : "Update"} Collaborator`} visible={inviteDialogVisible} className='bg-white shadow-md rounded-2xl z-100 !p-6' onHide={() => {if (!inviteDialogVisible) return; setInviteDialogVisible(false); }} >
+            <Dialog header={`${addOrUpdateMode === ADD_MODE ? "Add" : "Update"} Collaborator`} visible={inviteDialogVisible} className='bg-white shadow-md rounded-2xl z-100 !p-6 !font-(family-name:--font-space-grotesk)' onHide={() => {if (!inviteDialogVisible) return; setInviteDialogVisible(false); }} >
                 <Invite addOrUpdateMode={addOrUpdateMode} collaborator={collaborator} setCollaborator={setCollaborator} handleAddOrUpdateCollaborator={handleAddOrUpdateCollaborator} />
             </Dialog>
         </div>

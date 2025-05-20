@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react'
 import Profile from './Profile'
-import { UserPlus } from 'lucide-react'
+import { UserPlus, LayoutDashboard } from 'lucide-react'
 import { ADD_MODE, COLLABORATORS, PLAYGROUND_PROJECT_ID, TAB_TO_ROUTE } from '@/constants'
 import { redirect } from 'next/navigation'
 import { Dialog } from 'primereact/dialog'
@@ -33,14 +33,17 @@ function SubHeader() {
   };
 
   return (
-    <div className="flex items-center justify-between w-screen h-20 bg-slate-200 !px-6 !py-1">
+    <div className="flex items-center justify-between w-screen h-20 bg-slate-200 !px-6 !py-1 font-(family-name:--font-space-grotesk)">
         <div className="flex items-center justify-center gap-2">
-            <div className="text-lg">{"> " + currProject.name}</div>
+            <div className="text-lg flex items-center justify-center gap-2">
+              <LayoutDashboard className="h-7 w-7"/> 
+              <p>{currProject.name}</p>
+            </div>
             {
               currProject.projectId !== PLAYGROUND_PROJECT_ID ?
               <>
-                <div className="text-sm bg-green-500 !px-1.5 !py-0.3 rounded-xl text-white">Live</div> 
-                <div className="text-sm text-white rounded-xl bg-black !px-1.5 !py-0.3">{saveStatus}</div>
+                <div className="text-sm bg-green-500 !px-2 !py-1 rounded-xl text-white flex items-center justify-center">Live</div> 
+                <div className="text-sm text-white rounded-xl bg-black !px-2 !py-1 flex items-center justify-center">{saveStatus}</div>
               </>
               : <></>
             }
@@ -77,11 +80,11 @@ function SubHeader() {
                  }
                }}
           >
-               <UserPlus className="h-4 w-4" /> Invite
+               <UserPlus className="h-4 w-4 !font-(family-name:--font-space-grotesk)" /> Invite
           </div>    
         </div>
 
-        <Dialog header="Invite Collaborator" visible={inviteDialogVisible} className='bg-white shadow-md rounded-2xl z-100 !p-6' onHide={() => {if (!inviteDialogVisible) return; setInviteDialogVisible(false); }} >
+        <Dialog header="Invite Collaborator" visible={inviteDialogVisible} className='bg-white shadow-md rounded-2xl z-100 !p-6 !font-(family-name:--font-space-grotesk)' onHide={() => {if (!inviteDialogVisible) return; setInviteDialogVisible(false); }} >
           <Invite addOrUpdateMode={addOrUpdateMode} collaborator={collaborator} setCollaborator={setCollaborator} handleAddOrUpdateCollaborator={handleAddOrUpdateCollaborator} />
         </Dialog>
     </div>

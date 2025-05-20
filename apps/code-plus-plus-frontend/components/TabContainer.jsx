@@ -46,7 +46,7 @@ function TabContainer({codeOrWhiteboard}) {
         <div className="flex items-center justify-center h-[45] w-min bg-white shadow-[0px_0px_10px_rgba(0,0,0,0.13)] rounded-md gap-3 !px-2">
             {
                 tabs.map((tab, index) => {
-                    return (<div key={index} className={`relative flex items-center justify-center h-7 w-7 shadow-[0px_0px_10px_rgba(0,0,0,0.13)] rounded-sm text-md border border-slate-300 ${ index === (codeOrWhiteboard === CODE ? currProject.currCodeTabIdx: currProject.currWhiteboardTabIdx) ? "bg-slate-200": "cursor-pointer"}`} 
+                    return (<div key={index} className={`!font-(family-name:--font-space-grotesk) relative flex items-center justify-center h-7 w-7 shadow-[0px_0px_10px_rgba(0,0,0,0.13)] rounded-sm text-md border border-slate-300 ${ index === (codeOrWhiteboard === CODE ? currProject.currCodeTabIdx: currProject.currWhiteboardTabIdx) ? "bg-slate-200": "cursor-pointer"}`} 
                                 onClick={(e) => {
                                     (codeOrWhiteboard === CODE ?  setCurrCodeTabIdx(index) : setCurrWhiteboardTabIdx(index))
                                 }} 

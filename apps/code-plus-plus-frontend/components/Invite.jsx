@@ -12,7 +12,7 @@ function Invite({addOrUpdateMode, collaborator, setCollaborator, handleAddOrUpda
                 <input type="email" id="email" value={collaborator.email} placeholder="Enter collaborator email" className="!p-1 bg-slate-100 rounded-sm focus:outline-none" onChange={(e) => { addOrUpdateMode === ADD_MODE ? setCollaborator({...collaborator, email: e.target.value}) : "" }} />
             </div>
             <div className="flex flex-col gap-2">
-                <p className="text-slate-500">type</p>
+                <p className="text-slate-500">Type</p>
                 <div className="flex flex-col gap-2">
                     <div className={`bg-slate-100 rounded-sm !p-2 ${collaborator.type === EDITOR ? "!bg-black text-white" : "cursor-pointer"}`} onClick={() => setCollaborator({...collaborator, type: EDITOR})}>
                         <p>Editor</p>

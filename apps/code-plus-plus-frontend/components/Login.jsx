@@ -4,12 +4,11 @@ import React, {useState} from 'react';
 import Logo from './Logo';
 import { handleLogin, handleSignup } from '@/api/auth';
 
-function Login({setLoginDialogVisible}) {
+function Login({setLoginDialogVisible, mode, setMode}) {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
-    const [mode, setMode] = useState(LOGIN_MODE);
 
     const handleAuthentication = async () => {
         if(mode === LOGIN_MODE){
@@ -24,7 +23,7 @@ function Login({setLoginDialogVisible}) {
     };
 
     return (
-        <div className="h-105 w-68 shadow-md flex flex-col items-center justify-around">
+        <div className="h-105 w-68 shadow-md flex flex-col items-center justify-around !font-(family-name:--font-space-grotesk)">
             <section className="flex flex-col items-center justify-center">
                 <Logo />
                 <p className="text-sm">Real-time collaborative coding platform</p>
