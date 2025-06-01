@@ -20,7 +20,7 @@ export const createProject = async (req: AuthenticatedRequest, res: Response, ne
     const owner = req.user as JwtPayload
 
     const codeTabs = [{codeTabId: uuidv4(), language: DEFAULT_LANGUAGE, code: DEFAULT_CODE[DEFAULT_LANGUAGE]}]; 
-    const whiteboardTabs = [{whiteboardTabId: uuidv4(), paths: [], dots: [], currPath: []}];
+    const whiteboardTabs = [{whiteboardTabId: uuidv4(), shapes: []}];
     const id = uuidv4();
     const newProject = {
       projectId: id,
@@ -215,9 +215,7 @@ export const addWhiteboardTab = async (req: AuthenticatedRequest, res: Response,
 
     const newTab = {
       whiteboardTabId: uuidv4(),
-      paths: [],
-      dots: [],
-      currPath: []
+      shapes: [],
     };
 
     let apiResponse: APIResponse;
@@ -300,45 +298,48 @@ export const updateCodeTab = async (req: AuthenticatedRequest, res: Response, ne
 export const updateWhiteboardTab = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try{
     const { projectId, whiteboardTabId } = req.params;
-    const { paths, dots, currPath } = req.body;
+    const { shapes } = req.body;
     const userId = req.user?.userId;
 
-    const currTab = {
+    const currTabPayload = {
       whiteboardTabId,
-      paths,
-      dots,
-      currPath,
+      shapes,
     };
 
     let apiResponse: APIResponse;
-    const validation = whiteboardTabSchema.safeParse({...currTab});
-    
+    const validation = whiteboardTabSchema.safeParse({ ...currTabPayload });
+    console.log(validation.success);
     if(!validation.success){
-        const fieldErrors = Object.values(validation.error.flatten().fieldErrors).flat();
-        apiResponse = { success: false, errors: fieldErrors, message: "" };
-        return res.status(BAD_REQUEST_STATUS_CODE)
-                .json(apiResponse);
+      const fieldErrors = Object.values(validation.error.flatten().fieldErrors).flat();
+      apiResponse = { success: false, errors: fieldErrors, message: "" };
+      return res.status(BAD_REQUEST_STATUS_CODE).json(apiResponse);
     }
 
-    const project = await Project.findOne({ projectId: projectId });
-    if(!project) 
+    const project = await Project.findOne({ projectId });
+    if(!project){
       throw new ApiError("Project not found", NOT_FOUND_STATUS_CODE);
+    }
 
     const isOwner = project.owner.userId === userId;
-    const isEditor = project.collaborators.some(collab => collab.userId === userId && collab.type === EDITOR);
-    if(!isOwner && !isEditor) 
+    const isEditor = project.collaborators.some((collab) => collab.userId === userId && collab.type === EDITOR);
+    if(!isOwner && !isEditor){
       throw new ApiError("You do not have edit right", FORBIDDEN_STATUS_CODE);
+    }
 
-    const tab = project.whiteboardTabs.find(tab => tab.whiteboardTabId === whiteboardTabId);
-    if(!tab) throw new ApiError("Whiteboard tab not found", NOT_FOUND_STATUS_CODE);
+    const tab = project.whiteboardTabs.find((tab) => tab.whiteboardTabId === whiteboardTabId);
+    if(!tab){
+      throw new ApiError("Whiteboard tab not found", NOT_FOUND_STATUS_CODE);
+    }
 
-    tab.paths = paths;
-    tab.dots = dots;
-    tab.currPath = currPath;
+    tab.shapes = shapes;
     await project.save();
 
-    apiResponse = { success: true, message: "Whiteboard tab updated successfully", data: tab };
-    res.status(OK_STATUS_CODE).json(apiResponse);
+    apiResponse = {
+      success: true,
+      message: "Whiteboard tab updated successfully",
+      data: tab,
+    };
+    return res.status(OK_STATUS_CODE).json(apiResponse);
   }catch(exception){
     next(exception);
   }
@@ -523,7 +524,6 @@ export const updateCollaborator = async (req: AuthenticatedRequest, res: Respons
   }
 };
 
-
 export const removeCollaborator = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try{
     const projectId = req.params.projectId;
@@ -558,6 +558,60 @@ export const removeCollaborator = async (req: AuthenticatedRequest, res: Respons
     if(!updated) throw new ApiError("Project not found", NOT_FOUND_STATUS_CODE);
     const apiResponse: APIResponse = {success: true, data: {projectId, collaboratorId}, message: "Collaborator removed successfully"};
     res.json(apiResponse);
+  }catch(exception){
+    next(exception);
+  }
+};
+
+export const getUserPermission = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try{
+    const { projectId, userId } = req.params;
+    const project = await Project.findOne({ projectId });
+    if(!project){
+      throw new ApiError("Project not found", NOT_FOUND_STATUS_CODE);
+    }
+
+    const isOwner = project.owner.userId === userId;
+    const user = project.collaborators.filter(collab => collab.userId === userId);
+    const apiResponse: APIResponse = {
+      success: true,
+      data: { type: (isOwner ? OWNER :  user[0].type)},
+      message: ""
+    };
+    
+    return res.status(OK_STATUS_CODE).json(apiResponse);
+  }catch(exception){
+    next(exception);
+  }
+};
+
+export const getWhiteboardTab = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try{
+    const { projectId, whiteboardTabId } = req.params;
+    const userId = req.user?.userId;
+
+    const project = await Project.findOne({ projectId });
+    if(!project){
+      throw new ApiError("Project not found", NOT_FOUND_STATUS_CODE);
+    }
+
+    const isOwner = project.owner.userId === userId;
+    const isCollaborator = project.collaborators.some((collab) => collab.userId === userId);
+    if(!isOwner && !isCollaborator){
+      throw new ApiError("You do not have access to this project", FORBIDDEN_STATUS_CODE);
+    }
+
+    const tab = project.whiteboardTabs.find((tab) => tab.whiteboardTabId === whiteboardTabId);
+    if(!tab){
+      throw new ApiError("Whiteboard tab not found", NOT_FOUND_STATUS_CODE);
+    }
+
+    const apiResponse: APIResponse = {
+      success: true,
+      data: tab,
+      message: "Whiteboard tab fetched successfully",
+    };
+    return res.status(OK_STATUS_CODE).json(apiResponse);
   }catch(exception){
     next(exception);
   }

@@ -13,6 +13,12 @@ export interface APIResponseUser extends APIResponse {
     }
 }
 
+export interface APIResponsePermission extends APIResponse {
+  data: {
+      canEdit: boolean
+  }
+}
+
 export interface APIResponseProject<T = unknown> extends APIResponse {
   data: {
     whiteboardTabs: [{yjsUpdate: T}],

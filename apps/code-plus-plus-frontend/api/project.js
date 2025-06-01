@@ -28,6 +28,7 @@ export const handleCreateProject = async (name) => {
     }
   }catch(err){
     const errBody = await err.response.json();
+    console.log(errBody);
     const message = errBody.message || "Project creation failed due to a network or server error";
     toast.error(message);
     return false;
@@ -198,7 +199,6 @@ export const handleUpdateWhiteboardTabToProject = async (projectId, whiteboardTa
       credentials: 'include',
     }).json();
 
-    console.log(res);
     if(res.success){
       if(store.getState().saveStatus !== UNSAVED){
         store.getState().updateWhiteboardTab(whiteboardTabId, updates);

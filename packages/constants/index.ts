@@ -44,14 +44,15 @@ int main() {
   [python]: `print("Hello, World!")`
 };
 
-
 export const MAX_ITEMS_LIMIT = 50;
 export const PROJECT_COLLABORATOR_TYPES = [OWNER, EDITOR, VIEWER] as const;
 export const PROJECT_COLLABORATOR_ADD_TYPES = [EDITOR, VIEWER] as const;
 export const MAX_TABS_ALLOWED = 10;
 
+export const WHITEBOARD = "WHITEBOARD";
+export const CODE = "CODE";
 
-export const DEFAULT_WHITEBOARD =        {
+export const DEFAULT_WHITEBOARD =  {
             "paths": [
                 {
                     "points": [

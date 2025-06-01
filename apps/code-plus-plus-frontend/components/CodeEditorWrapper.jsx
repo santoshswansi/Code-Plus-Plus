@@ -64,8 +64,8 @@ function CodeEditorWrapper() {
                 <SplitterPanel><div className="h-[calc(100vh-35px)]"><CodeEditor handleCodeChange={handleCodeChange} /></div></SplitterPanel>
                 <SplitterPanel>
                     <Splitter layout="vertical">
-                        <SplitterPanel className="w-[100%] bg-[#1E1E1E]"><div className="relative w-[100%] h-[100%]"><span className="absolute !mt-2 !ml-2 bg-slate-200 text-black h-7 w-17 rounded-sm !border-0 flex items-center justify-center font-(family-name:--font-space-grotesk)">Input</span><textarea type="text" className="w-[100%] h-[100%] !pt-12 !px-2 text-slate-200 focus:outline-none resize-none" onChange={(e) => setInput(e.target.value)} /></div></SplitterPanel>
-                        <SplitterPanel className="w-[100%] bg-[#1E1E1E]"><div className="relative w-[100%] h-[100%]"><span className="absolute !mt-2 !ml-2 bg-slate-200 text-black h-7 w-17 rounded-sm flex items-center justify-center font-(family-name:--font-space-grotesk)">Output</span><pre className="w-[100%] h-[100%] !pt-12 !px-2 text-slate-200">{output}</pre></div></SplitterPanel>
+                        <SplitterPanel size={50} minSize={10} className="w-[100%] bg-[#1E1E1E]"><div className="relative w-[100%] h-[100%]"><span className="absolute !mt-2 !ml-2 bg-slate-200 text-black h-7 w-17 rounded-sm !border-0 flex items-center justify-center font-(family-name:--font-space-grotesk)">Input</span><textarea type="text" className="w-[100%] h-[100%] !pt-12 !px-2 text-slate-200 focus:outline-none resize-none" onChange={(e) => setInput(e.target.value)} /></div></SplitterPanel>
+                        <SplitterPanel size={50} minSize={10} className="w-[100%] bg-[#1E1E1E]"><div className="relative w-[100%] h-[100%]"><span className="absolute !mt-2 !ml-2 bg-slate-200 text-black h-7 w-17 rounded-sm flex items-center justify-center font-(family-name:--font-space-grotesk)">Output</span><pre className="w-[100%] h-[100%] !pt-12 !px-2 text-slate-200">{output}</pre></div></SplitterPanel>
                     </Splitter>
                 </SplitterPanel>
             </Splitter>

@@ -1,107 +1,143 @@
-import WebSocket, { WebSocketServer } from 'ws';
-import * as Y from 'yjs';
-import { applyUpdate } from 'yjs';
-import { authMiddleware } from './middlewares/middlewares.ts';
-import { accessControlMiddleware } from './middlewares/middlewares.ts';
-import { WSContext, WSMiddleware } from './types/index.ts';
-import { APIResponse, APIResponseProject } from "./../../packages/types/index.ts";
-import "dotenv/config";
-import { fileURLToPath } from "url";
+import * as http from "http";
+import { WebSocketServer, WebSocket } from "ws";
+import * as Y from "yjs";
+import { encodeStateAsUpdate, applyUpdate } from "yjs";
+import { URL } from "url";
+import ky from "ky";
+import { APIResponsePermission, JwtPayload, APIResponse } from "../../packages/types/index.ts";
 import dotenv from "dotenv";
 import path from "path";
-import ky from "ky";
+import { fileURLToPath } from "url";
+import jwt from "jsonwebtoken";
+import { WS_BAD_REQUEST, WS_FORBIDDEN, WS_INTERNAL_ERROR, WS_UNAUTHORIZED } from "./constants/index.ts";
+import { WHITEBOARD, CODE, OWNER, EDITOR} from "../../packages/constants/index.ts";
 
-const PORT = Number(process.env.PORT) || 1234;
+const PORT = process.env.PORT || 3300;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
-const docs = new Map<string, Y.Doc>();
-const wss = new WebSocketServer({ port: PORT });
+const API_GATEWAY_BASE_URL = process.env.API_GATEWAY_BASE_URL;
+const JWT_SECRET = process.env.JWT_SECRET as string;
 
-console.log(`WebSocket server running on ws://localhost:${PORT}`);
+const docs: Map<string, Y.Doc> = new Map();
 
-wss.on('connection', async (ws, req) => {
-  const url = new URL(req.url || '', `http://${req.headers.host}`);
-  const whiteboardTabId = url.pathname.split('/').pop() as string;
-  const token = url.searchParams.get('token') as string;
-  const projectId = url.searchParams.get("projectId") as string;
+const verifyToken = (token: string | null): JwtPayload | null => {
+  if(!token) 
+    return null;
+  
+  try{
+    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    if(typeof payload === "object" && "userId" in payload) {
+      return payload;
+    }
 
-  const context: WSContext = { req, url, token, whiteboardTabId, projectId };
-  const middlewares: WSMiddleware[] = [authMiddleware, accessControlMiddleware];
+    return null;
+  }catch{
+    return null;
+  }
+};
 
-  let apiResponse: APIResponse;
-  for(const middleware of middlewares){
-    const ok = await middleware(ws, context);
-    if(!ok){
-      apiResponse = { success: false, message: 'Unauthorized or access denied' };
-      ws.send(JSON.stringify(apiResponse));
+const server = http.createServer();
+const wss = new WebSocketServer({ server });
+
+wss.on("connection", async (ws: WebSocket, req) => {
+  let canEdit = false;
+
+  try{
+    const requestUrl = req.url ?? "";
+    const url = new URL(requestUrl, `http://${req.headers.host}`);
+    const token = url.searchParams.get("token");
+    const projectId = url.searchParams.get("projectId");
+    const tabType = url.searchParams.get("tabType");
+    const payload = verifyToken(token);
+
+    if(!payload || !projectId){
+      ws.close(WS_UNAUTHORIZED, "Unauthorized");
       return;
     }
-  }
 
-  let ydoc = docs.get(whiteboardTabId);
-  if(!ydoc){
-    ydoc = new Y.Doc();
-    docs.set(whiteboardTabId, ydoc);
-
+    const userId = payload.userId;
+    let permResp: APIResponse;
     try{
-      const response: APIResponseProject = await ky.get(`${process.env.API_GATEWAY_BASE_URL}/projects/${projectId}`).json();
-
-      if(response.success){
-        const whiteboardTab = response.data.whiteboardTabs.find((tab: any) => tab.whiteboardTabId === whiteboardTabId);
-
-        if(Array.isArray(whiteboardTab?.yjsUpdate)){
-          Y.applyUpdate(ydoc, Uint8Array.from(whiteboardTab.yjsUpdate));
-        }
-      }else{
-        apiResponse = { success: false, message: response.message };
-        ws.send(JSON.stringify(apiResponse));
-      }
-    }catch(err){
-      apiResponse = { success: false, message: 'Failed to load whiteboard project data.' };
-      ws.send(JSON.stringify(apiResponse));
-    }
-  }
-
-  ws.on('message', (data) => {
-    const msg = new Uint8Array(data as ArrayBuffer);
-    if(msg[0] === 0){
-      const clientStateVector = msg.slice(1);
-      const diff = Y.encodeStateAsUpdate(ydoc, clientStateVector);
-      ws.send(diff);
+      permResp = (await ky.get(`${API_GATEWAY_BASE_URL}/projects/${projectId}/collaborators/${userId}/permission`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        ).json()) as APIResponse;
+    }catch{
+      ws.close(WS_FORBIDDEN, "Forbidden");
       return;
     }
 
-    applyUpdate(ydoc, msg);
-  });
+    const userType = (permResp.data as { type: string }).type;
+    if(userType === OWNER || userType === EDITOR){
+      canEdit = true;
+    }
 
-  const updateHandler = async (update: Uint8Array) => {
-    wss.clients.forEach((client) => {
-      if(client !== ws && client.readyState === WebSocket.OPEN){
-        client.send(update);
+    const docId = url.pathname.slice(1); 
+    let yDoc = docs.get(docId);
+    if(!yDoc){
+      yDoc = new Y.Doc();
+      docs.set(docId, yDoc);
+
+      let tabResp: APIResponse;
+      try{
+        let url;
+        if(tabType === WHITEBOARD)
+          url = `${API_GATEWAY_BASE_URL}/projects/${projectId}/whiteboardTabs/${docId}`;
+        else if(tabType === CODE)
+          url = `${API_GATEWAY_BASE_URL}/projects/${projectId}/codeTabs/${docId}`;
+        else{
+          ws.close(WS_BAD_REQUEST, "Tab type does not match");
+          return;
+        }
+
+        tabResp = (await ky.get(url,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ).json()) as APIResponse;
+      }catch{
+        ws.close(WS_INTERNAL_ERROR, "Failed to fetch tab");
+        return;
       }
+
+      if(tabType === WHITEBOARD){
+        const tabData = tabResp.data as { whiteboardTabId: string; shapes: unknown[] };
+        if (Array.isArray(tabData.shapes) && tabData.shapes.length > 0) {
+          const yShapes = yDoc.getArray("shapes");
+          yShapes.insert(0, tabData.shapes);
+        }
+      }
+    }
+
+    const initState = encodeStateAsUpdate(yDoc);
+    ws.send(initState);
+
+    const broadcastUpdate = (update: Uint8Array) => {
+      wss.clients.forEach((client) => {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
+          client.send(update);
+        }
+      });
+    };
+
+    yDoc.on("update", broadcastUpdate);
+
+    ws.on("message", (message: Buffer) => {
+      if(!canEdit) return;
+      const update = new Uint8Array(message);
+      applyUpdate(yDoc, update);
     });
 
-    try {
-      const encoded = Y.encodeStateAsUpdate(ydoc);
-      await ky.put(`${process.env.API_GATEWAY_BASE_URL}/projects/${projectId}/whiteboards/${whiteboardTabId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${context.token}`,
-        },
-        json: { yjsUpdate: Array.from(encoded) },
-      }).json();
-    }catch(err){
-      apiResponse = { success: false, message: 'Failed to persist whiteboard changes.'};
-      ws.send(JSON.stringify(apiResponse));
-    }
-  };
+    ws.on("close", () => {
+      yDoc.off("update", broadcastUpdate);
+    });
+  }catch(err){
+    ws.close(WS_INTERNAL_ERROR, "Internal Error");
+  }
+});
 
-  ydoc.on('update', updateHandler);
-
-  ws.on('close', () => {
-    ydoc!.off('update', updateHandler);
-  });
+server.listen(PORT, () => {
+  console.log(`WebSocket server running on ws://localhost:${PORT}`);
 });
